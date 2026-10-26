@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Konversi Satuan Data | Mr. One El Hasyimi</title>
+<style>
+:root{--bg:#0b1220;--panel:#121d31;--panel2:#182740;--text:#eef5ff;--muted:#a9bad2;--accent:#5eead4;--accent2:#60a5fa;--line:#2a3b55}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:Inter,Segoe UI,Arial,sans-serif;background:radial-gradient(circle at 15% 10%,#16334a 0,transparent 35%),linear-gradient(135deg,#080d18,#101b2d 65%,#0b1220);color:var(--text);display:flex;align-items:center;justify-content:center;padding:28px 16px}
+.wrap{width:min(980px,100%)}
+header{text-align:center;margin-bottom:24px}
+.badge{display:inline-block;padding:7px 13px;border:1px solid #326b77;border-radius:99px;color:var(--accent);font-size:.82rem;letter-spacing:.08em;text-transform:uppercase;background:#0d282d}
+h1{font-size:clamp(2rem,5vw,3.4rem);margin:15px 0 8px;line-height:1.08;letter-spacing:-.04em}
+h1 span{color:var(--accent)}
+header p{color:var(--muted);margin:0}
+.card{background:linear-gradient(145deg,rgba(18,29,49,.97),rgba(14,23,39,.97));border:1px solid var(--line);border-radius:24px;padding:clamp(18px,4vw,34px);box-shadow:0 25px 70px #0005}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+label{display:block;color:var(--muted);font-size:.92rem;margin:0 0 9px}
+input,select{width:100%;border:1px solid var(--line);border-radius:12px;background:#0b1424;color:var(--text);padding:14px;font-size:1rem;outline:none}
+input:focus,select:focus{border-color:var(--accent2);box-shadow:0 0 0 3px #60a5fa22}
+input[type=number]{font-size:1.2rem;font-weight:600}
+.controls{display:flex;gap:10px;align-items:center;margin:20px 0;flex-wrap:wrap}
+button{border:0;border-radius:12px;padding:12px 16px;font-weight:700;cursor:pointer;transition:.2s}
+.primary{background:var(--accent);color:#05211f;flex:1}
+.primary:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+.result{background:linear-gradient(120deg,#10353b,#122c48);border:1px solid #28616b;border-radius:18px;padding:20px;margin-top:10px}
+.result .small{color:#b4d9dd;font-size:.9rem}
+#resultValue{font-size:clamp(1.7rem,5vw,2.7rem);font-weight:800;overflow-wrap:anywhere;margin:8px 0;letter-spacing:-.03em}
+#resultUnit{color:var(--accent);font-weight:700}
+.note{color:var(--muted);font-size:.88rem;line-height:1.55;margin-top:18px}
+.table-wrap{margin-top:24px;overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.93rem}
+th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line)}
+th{color:var(--accent);font-weight:700}
+td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+footer{text-align:center;color:var(--muted);font-size:.9rem;margin-top:22px}
+footer strong{color:var(--accent)}
+@media(max-width:640px){.grid{grid-template-columns:1fr}.card{border-radius:18px}.controls button{width:100%}th,td{padding:10px 8px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="badge">Informatika • Kelas 9</div>
+  <h1>Konversi <span>Satuan Data</span></h1>
+  <p>Ubah satuan penyimpanan data secara cepat dan mudah.</p>
+</header>
+<main class="card">
+  <div class="grid">
+    <div>
+      <label for="amount">Nilai yang akan dikonversi</label>
+      <input id="amount" type="number" min="0" step="any" value="1" placeholder="Masukkan nilai">
+    </div>
+    <div>
+      <label for="system">Sistem satuan</label>
+      <select id="system">
+        <option value="decimal">Desimal (1 KB = 1.000 byte)</option>
+        <option value="binary">Biner (1 KiB = 1.024 byte)</option>
+      </select>
+    </div>
+    <div>
+      <label for="from">Dari satuan</label>
+      <select id="from"></select>
+    </div>
+    <div>
+      <label for="to">Ke satuan</label>
+      <select id="to"></select>
+    </div>
+  </div>
+  <div class="controls">
+    <button class="primary" id="convert">Konversi Sekarang</button>
+    <button class="secondary" id="swap" title="Tukar satuan">⇄ Tukar Satuan</button>
+    <button class="secondary" id="reset">Reset</button>
+  </div>
+  <section class="result" aria-live="polite">
+    <div class="small">Hasil konversi</div>
+    <div id="resultValue">1.000</div>
+    <div id="resultUnit">byte (B)</div>
+  </section>
+  <p class="note"><strong>Catatan:</strong> Sistem desimal umum digunakan untuk kapasitas penyimpanan perangkat (KB, MB, GB). Sistem biner menggunakan KiB, MiB, GiB dan seterusnya. Bit (b) berbeda dengan byte (B): <strong>1 byte = 8 bit</strong>.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Satuan</th><th>Singkatan</th><th>Dalam byte</th></tr></thead>
+      <tbody id="referenceRows"></tbody>
+    </table>
+  </div>
+</main>
+<footer>Dirancang untuk pembelajaran Informatika<br><strong>@Mr. One El Hasyimi Kls 9 IBS 1</strong></footer>
+</div>
+<script>
+const units = [
+ {id:'bit',name:'bit',symbol:'b',factor:1/8,kind:'bit'},
+ {id:'byte',name:'byte',symbol:'B',factor:1,kind:'byte'},
+ {id:'k',name:'Kilobyte',symbol:'KB',power:1,kind:'byte'},
+ {id:'m',name:'Megabyte',symbol:'MB',power:2,kind:'byte'},
+ {id:'g',name:'Gigabyte',symbol:'GB',power:3,kind:'byte'},
+ {id:'t',name:'Terabyte',symbol:'TB',power:4,kind:'byte'},
+ {id:'p',name:'Petabyte',symbol:'PB',power:5,kind:'byte'},
+ {id:'ki',name:'Kibibyte',symbol:'KiB',power:1,kind:'binary'},
+ {id:'mi',name:'Mebibyte',symbol:'MiB',power:2,kind:'binary'},
+ {id:'gi',name:'Gibibyte',symbol:'GiB',power:3,kind:'binary'},
+ {id:'ti',name:'Tebibyte',symbol:'TiB',power:4,kind:'binary'},
+ {id:'pi',name:'Pebibyte',symbol:'PiB',power:5,kind:'binary'}
+];
+const $=id=>document.getElementById(id);
+function base(u,sys){
+ if(u.id==='bit') return 1/8;
+ if(u.id==='byte') return 1;
+ if(u.kind==='binary') return Math.pow(1024,u.power);
+ return Math.pow(sys==='binary'?1024:1000,u.power);
+}
+function populate(){
+ const sys=$('system').value, oldFrom=$('from').value, oldTo=$('to').value;
+ const valid=units.filter(u=>u.id==='bit'||u.id==='byte'||(sys==='decimal'?u.kind!=='binary':u.kind!=='byte'));
+ $('from').innerHTML=''; $('to').innerHTML='';
+ valid.forEach(u=>{
+  const label=`${u.name} (${u.symbol})`;
+  $('from').add(new Option(label,u.id)); $('to').add(new Option(label,u.id));
+ });
+ $('from').value=valid.some(u=>u.id===oldFrom)?oldFrom:(sys==='decimal'?'k':'ki');
+ $('to').value=valid.some(u=>u.id===oldTo)?oldTo:'byte';
+ renderReference(); convert();
+}
+function format(n){
+ if(!Number.isFinite(n)) return 'Nilai terlalu besar untuk ditampilkan';
+ return new Intl.NumberFormat('id-ID',{maximumSignificantDigits:12}).format(n);
+}
+function convert(){
+ const amount=Number($('amount').value);
+ const from=units.find(u=>u.id===$('from').value), to=units.find(u=>u.id===$('to').value);
+ if($('amount').value.trim()===''||!Number.isFinite(amount)||amount<0){
+  $('resultValue').textContent='Masukkan nilai ≥ 0'; $('resultUnit').textContent=''; return;
+ }
+ const sys=$('system').value;
+ const result=amount*base(from,sys)/base(to,sys);
+ $('resultValue').textContent=format(result);
+ $('resultUnit').textContent=`${to.name} (${to.symbol})`;
+}
+function renderReference(){
+ const sys=$('system').value;
+ const rows=[
+  ['bit','b',1/8],['byte','B',1],
+  [sys==='decimal'?'Kilobyte':'Kibibyte',sys==='decimal'?'KB':'KiB',Math.pow(sys==='decimal'?1000:1024,1)],
+  [sys==='decimal'?'Megabyte':'Mebibyte',sys==='decimal'?'MB':'MiB',Math.pow(sys==='decimal'?1000:1024,2)],
+  [sys==='decimal'?'Gigabyte':'Gibibyte',sys==='decimal'?'GB':'GiB',Math.pow(sys==='decimal'?1000:1024,3)],
+  [sys==='decimal'?'Terabyte':'Tebibyte',sys==='decimal'?'TB':'TiB',Math.pow(sys==='decimal'?1000:1024,4)],
+  [sys==='decimal'?'Petabyte':'Pebibyte',sys==='decimal'?'PB':'PiB',Math.pow(sys==='decimal'?1000:1024,5)]
+ ];
+ $('referenceRows').innerHTML=rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${format(r[2])} B</td></tr>`).join('');
+}
+$('convert').addEventListener('click',convert);
+$('amount').addEventListener('input',convert);
+$('from').addEventListener('change',convert);
+$('to').addEventListener('change',convert);
+$('system').addEventListener('change',populate);
+$('swap').addEventListener('click',()=>{const a=$('from').value;$('from').value=$('to').value;$('to').value=a;convert();});
+$('reset').addEventListener('click',()=>{$('amount').value='1';$('system').value='decimal';populate();});
+populate();
+</script>
+</body>
+</html>
